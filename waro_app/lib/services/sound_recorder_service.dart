@@ -188,8 +188,18 @@ class SoundRecorderService extends ChangeNotifier {
   }
 
   /// Reset state
-  void reset() {
+  Future<void> reset() async {
     _durationTimer?.cancel();
+    
+    try {
+      if (await _recorder.isRecording()) {
+        await _recorder.stop();
+      }
+      await _player.stop();
+    } catch (e) {
+      debugPrint('Reset stop error: $e');
+    }
+
     _state = RecordingState.idle;
     _currentRecordingPath = null;
     _currentDuration = Duration.zero;

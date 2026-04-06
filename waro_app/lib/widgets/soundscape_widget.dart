@@ -201,7 +201,7 @@ class _SoundscapeRecorderWidgetState extends State<SoundscapeRecorderWidget>
             TextButton.icon(
               onPressed: () async {
                 await _svc.deleteRecording(_svc.currentRecordingPath!);
-                _svc.reset();
+                await _svc.reset();
               },
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               label: const Text('Hapus', style: TextStyle(color: Colors.red)),

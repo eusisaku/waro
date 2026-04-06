@@ -338,8 +338,8 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_showSoundscape)
             SoundscapeRecorderWidget(
               onSoundscapeRecorded: (path) {
+                _sendSoundscape(path);
                 setState(() => _showSoundscape = false);
-                debugPrint('Soundscape dikirim: $path');
               },
             ),
 
@@ -348,6 +348,35 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _sendSoundscape(String path) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final msg = {
+      'message_id': 'sound_$now',
+      'warung_id': widget.warungId,
+      'recipient_id': widget.contactId,
+      'sender_id': _myId,
+      'sender_name': _myName,
+      'content': 'Suara Lingkungan 🎤',
+      'message_type': 'soundscape',
+      'attachment_path': path,
+      'sent_at': now,
+      'sync_status': 'synced',
+    };
+
+    if (kIsWeb) {
+      setState(() {
+        _messages.add(msg);
+      });
+      _scrollToBottom();
+      return;
+    }
+
+    final db = await DatabaseHelper.instance.database;
+    await db.insert('messages', msg);
+    await _loadMessages();
+    _scrollToBottom();
   }
 
   Widget _buildMessageBubble(Map<String, dynamic> msg) {
