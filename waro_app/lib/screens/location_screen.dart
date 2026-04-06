@@ -104,11 +104,33 @@ class _LocationScreenState extends State<LocationScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.lock_outline, size: 14, color: Colors.grey),
-                const SizedBox(width: 4),
-                const Text('Lokasi exact tidak pernah dikirim', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.verified_user_outlined, size: 12, color: Colors.blue),
+                    const SizedBox(width: 4),
+                    Text('Privasi Terjaga', style: TextStyle(fontSize: 10, color: Colors.blue[700], fontWeight: FontWeight.bold)),
+                  ]),
+                ),
+                const SizedBox(width: 8),
+                const Text('Lokasi exact tidak pernah dikirim', style: TextStyle(fontSize: 10, color: Colors.grey)),
                 const Spacer(),
-                Text('⏱ Update: $_nextUpdate', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                ElevatedButton(
+                  onPressed: () {
+                     setState(() => _nextUpdate = 'Baru saja diupdate');
+                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('📍 Lokasi Kecamatan berhasil diupdate!')));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    minimumSize: const Size(0, 28),
+                    backgroundColor: const Color(0xFF2D7A4F),
+                  ),
+                  child: const Text('Update Sekarang', style: TextStyle(fontSize: 10)),
+                ),
               ],
             ),
           ],

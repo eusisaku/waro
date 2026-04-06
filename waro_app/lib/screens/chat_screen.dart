@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../services/pause_chat_service.dart';
+import '../services/sound_recorder_service.dart';
 import '../database/database_helper.dart';
 import '../widgets/soundscape_widget.dart';
 import 'pause_chat_screen.dart';
