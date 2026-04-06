@@ -54,6 +54,21 @@ class SoundRecorderService extends ChangeNotifier {
   Future<void> startRecording() async {
     if (_state == RecordingState.recording) return;
 
+    if (kIsWeb) {
+      _state = RecordingState.recording;
+      _currentDuration = Duration.zero;
+      _durationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        _currentDuration += const Duration(milliseconds: 100);
+        notifyListeners();
+        if (_currentDuration.inSeconds >= AppConstants.soundscapeMaxDurationSeconds) {
+          stopRecording();
+          timer.cancel();
+        }
+      });
+      notifyListeners();
+      return;
+    }
+
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
       _state = RecordingState.error;
@@ -105,6 +120,13 @@ class SoundRecorderService extends ChangeNotifier {
 
     _durationTimer?.cancel();
 
+    if (kIsWeb) {
+      _state = RecordingState.idle;
+      _currentRecordingPath = 'web_mock_soundscape.m4a';
+      notifyListeners();
+      return _currentRecordingPath;
+    }
+
     try {
       final path = await _recorder.stop();
       _state = RecordingState.idle;
@@ -133,6 +155,15 @@ class SoundRecorderService extends ChangeNotifier {
 
   /// Putar preview rekaman
   Future<void> playPreview(String filePath) async {
+    if (kIsWeb) {
+      _state = RecordingState.playing;
+      notifyListeners();
+      await Future.delayed(const Duration(seconds: 2));
+      _state = RecordingState.idle;
+      notifyListeners();
+      return;
+    }
+
     if (_state == RecordingState.playing) {
       await _player.stop();
     }
@@ -156,6 +187,11 @@ class SoundRecorderService extends ChangeNotifier {
 
   /// Hapus rekaman
   Future<void> deleteRecording(String filePath) async {
+    if (kIsWeb) {
+       _currentRecordingPath = null;
+       notifyListeners();
+       return;
+    }
     try {
       final file = File(filePath);
       if (await file.exists()) await file.delete();

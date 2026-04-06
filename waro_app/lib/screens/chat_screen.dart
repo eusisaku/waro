@@ -75,7 +75,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _checkPauseStatus() async {
-    if (widget.contactId == null) return;
+    if (widget.contactId == null || kIsWeb) return;
     final paused = await PauseChatService().isContactPaused(widget.contactId!);
     setState(() => _isPaused = paused);
   }
@@ -86,6 +86,27 @@ class _ChatScreenState extends State<ChatScreen> {
     // Cek pause
     if (widget.contactId != null && _isPaused) {
       _showPausedDialog(text.trim());
+      return;
+    }
+
+    if (kIsWeb) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final msg = {
+        'message_id': 'web_$now',
+        'warung_id': widget.warungId,
+        'recipient_id': widget.contactId,
+        'sender_id': _myId,
+        'sender_name': _myName,
+        'content': text.trim(),
+        'message_type': 'text',
+        'sent_at': now,
+        'sync_status': 'synced',
+      };
+      setState(() {
+        _messages.add(msg);
+      });
+      _textController.clear();
+      _scrollToBottom();
       return;
     }
 

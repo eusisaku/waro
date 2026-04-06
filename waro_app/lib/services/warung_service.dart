@@ -129,10 +129,9 @@ class WarungService extends ChangeNotifier {
     required String createdByName,
     int maxMembers = AppConstants.warungMaxMembers,
   }) async {
-    final db = await _db.database;
     final now = DateTime.now();
-    final warungId = 'wr_${now.millisecondsSinceEpoch}';
     final expiresAt = now.add(const Duration(hours: AppConstants.warungDurationHours));
+    final warungId = 'wr_${now.millisecondsSinceEpoch}';
 
     final warung = Warung(
       warungId: warungId,
@@ -145,6 +144,14 @@ class WarungService extends ChangeNotifier {
       currentMembers: 1,
       isActive: true,
     );
+
+    if (kIsWeb) {
+      _webWarungs.insert(0, warung);
+      await loadWarungs(createdBy);
+      return warung;
+    }
+
+    final db = await _db.database;
 
     await db.insert('warungs', warung.toMap());
 
@@ -287,10 +294,41 @@ class WarungService extends ChangeNotifier {
     return result.map(WarungMember.fromMap).toList();
   }
 
+  List<Warung> _webWarungs = []; // Temporary storage for web testing
+
   Future<void> loadWarungs(String userId) async {
     if (kIsWeb) {
-      _activeWarungs = [];
-      _expiredWarungs = [];
+      // Mock data awal untuk web
+      if (_webWarungs.isEmpty) {
+        _webWarungs = [
+          Warung(
+            warungId: 'wr_mock_1',
+            name: 'Pojok Digital Detox',
+            createdBy: 'user_1',
+            createdByName: 'Andi',
+            createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+            expiresAt: DateTime.now().add(const Duration(hours: 20)),
+            maxMembers: 5,
+            currentMembers: 3,
+            isActive: true,
+            lastMessage: 'Ayo ngopi tenang di sini ☕',
+          ),
+          Warung(
+            warungId: 'wr_mock_2',
+            name: 'Waro Malam Jumatan',
+            createdBy: 'user_2',
+            createdByName: 'Budi',
+            createdAt: DateTime.now().subtract(const Duration(hours: 22)),
+            expiresAt: DateTime.now().add(const Duration(hours: 2)),
+            maxMembers: 5,
+            currentMembers: 5,
+            isActive: true,
+            lastMessage: '⚠️ Segera bubar guys!',
+          ),
+        ];
+      }
+      _activeWarungs = _webWarungs.where((w) => !w.isExpired).toList();
+      _expiredWarungs = _webWarungs.where((w) => w.isExpired).toList();
       notifyListeners();
       return;
     }
