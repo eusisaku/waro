@@ -160,8 +160,8 @@ class SoundRecorderService extends ChangeNotifier {
       notifyListeners();
       
       try {
-        // Play a relaxing placeholder sound for web simulation
-        await _player.play(UrlSource('https://www.soundjay.com/nature/rain-07.mp3'));
+        // Play a reliable placeholder sound for web simulation
+        await _player.play(UrlSource('https://codeskulptor-demos.commondatastorage.googleapis.com/descent/gotitem.mp3'));
         
         _player.onPlayerComplete.listen((_) {
           _state = RecordingState.idle;
