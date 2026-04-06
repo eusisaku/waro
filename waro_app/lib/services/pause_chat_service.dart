@@ -60,6 +60,7 @@ class PauseChatService extends ChangeNotifier {
   List<PausedContact> get pausedContacts => _pausedContacts;
 
   void init() {
+    if (kIsWeb) return;
     _startPauseChecker();
     _checkExpiredPauses();
   }

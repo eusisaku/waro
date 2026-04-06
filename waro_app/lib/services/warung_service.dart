@@ -116,6 +116,7 @@ class WarungService extends ChangeNotifier {
   List<Warung> get expiredWarungs => _expiredWarungs;
 
   void init() {
+    if (kIsWeb) return;
     _startExpiryChecker();
     checkAndExpireWarungs();
   }
@@ -287,6 +288,12 @@ class WarungService extends ChangeNotifier {
   }
 
   Future<void> loadWarungs(String userId) async {
+    if (kIsWeb) {
+      _activeWarungs = [];
+      _expiredWarungs = [];
+      notifyListeners();
+      return;
+    }
     _activeWarungs = await getActiveWarungs(userId);
     _expiredWarungs = await getExpiredWarungs(userId);
     notifyListeners();

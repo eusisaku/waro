@@ -1,5 +1,6 @@
 // lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../services/pause_chat_service.dart';
 import 'pause_chat_screen.dart';
 import 'backup_screen.dart';

@@ -1,5 +1,6 @@
 // lib/screens/chat_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../services/pause_chat_service.dart';
 import '../database/database_helper.dart';

@@ -73,6 +73,7 @@ class SyncQueueManager extends ChangeNotifier {
   bool get isSyncing => _isSyncing;
 
   void init() {
+    if (kIsWeb) return;
     _startRetryTimer();
     _refreshStats();
   }
