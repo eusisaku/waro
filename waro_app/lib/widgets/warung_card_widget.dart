@@ -179,6 +179,18 @@ class WarungCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                      if (isArchive)
+                        ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[200],
+                            foregroundColor: Colors.grey[700],
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                            minimumSize: const Size(0, 28),
+                          ),
+                          child: const Text('Arsipkan', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
                     ],
                   ),
                 ],

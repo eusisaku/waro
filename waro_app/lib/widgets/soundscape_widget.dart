@@ -93,18 +93,23 @@ class _SoundscapeRecorderWidgetState extends State<SoundscapeRecorderWidget>
         ),
         const SizedBox(height: 16),
         GestureDetector(
-          onLongPressStart: (_) => _startRecord(),
-          onLongPressEnd: (_) => _stopRecord(),
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                colors: [Color(0xFF4CAF80), Color(0xFF2D7A4F)],
+          onTapDown: (_) => _startRecord(),
+          onTapCancel: () => _stopRecord(),
+          onTapUp: (_) => _stopRecord(),
+          child: AnimatedScale(
+            scale: _svc.state == RecordingState.recording ? 1.2 : 1.0,
+            duration: const Duration(milliseconds: 100),
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [Color(0xFF4CAF80), Color(0xFF2D7A4F)],
+                ),
+                shape: BoxShape.circle,
               ),
-              shape: BoxShape.circle,
+              child: const Icon(Icons.mic, color: Colors.white, size: 36),
             ),
-            child: const Icon(Icons.mic, color: Colors.white, size: 36),
           ),
         ),
         const SizedBox(height: 8),

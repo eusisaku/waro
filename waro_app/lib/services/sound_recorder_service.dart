@@ -159,16 +159,19 @@ class SoundRecorderService extends ChangeNotifier {
       _state = RecordingState.playing;
       notifyListeners();
       
+      // Visual feedback for simulation
+      debugPrint('Web Simulation: Playing soundscape...');
+      
       try {
-        // Play a reliable placeholder sound for web simulation
-        await _player.play(UrlSource('https://codeskulptor-demos.commondatastorage.googleapis.com/descent/gotitem.mp3'));
+        // One last try with a very common test sound
+        await _player.play(UrlSource('https://luan.xyz/files/audio/ambient_c_motion.mp3'));
         
         _player.onPlayerComplete.listen((_) {
           _state = RecordingState.idle;
           notifyListeners();
         });
       } catch (e) {
-        debugPrint('Web Playback error: $e');
+        debugPrint('Web Playback suppressed by browser: $e');
         await Future.delayed(const Duration(seconds: 3));
         _state = RecordingState.idle;
         notifyListeners();

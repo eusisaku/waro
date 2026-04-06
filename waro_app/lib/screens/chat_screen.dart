@@ -228,7 +228,7 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 const Icon(Icons.pause_circle, color: Colors.orange, size: 18),
                 const SizedBox(width: 8),
-                const Text('0 kontak dalam mode pause', style: TextStyle(fontSize: 12)),
+                const Text('1 kontak dalam mode pause', style: TextStyle(fontSize: 12)),
                 const Spacer(),
                 TextButton(
                   onPressed: () {},

@@ -325,6 +325,18 @@ class WarungService extends ChangeNotifier {
             isActive: true,
             lastMessage: '⚠️ Segera bubar guys!',
           ),
+          Warung(
+            warungId: 'wr_mock_3',
+            name: 'Kopi Sore Kemarin',
+            createdBy: 'user_3',
+            createdByName: 'Citra',
+            createdAt: DateTime.now().subtract(const Duration(hours: 30)),
+            expiresAt: DateTime.now().subtract(const Duration(hours: 6)),
+            maxMembers: 5,
+            currentMembers: 4,
+            isActive: false,
+            lastMessage: 'Sampai jumpa besok ya!',
+          ),
         ];
       }
       _activeWarungs = _webWarungs.where((w) => !w.isExpired).toList();
