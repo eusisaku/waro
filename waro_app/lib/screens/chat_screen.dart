@@ -425,12 +425,20 @@ class _ChatScreenState extends State<ChatScreen> {
                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2D7A4F)),
               ),
             if (type == 'soundscape')
-              Row(children: [
-                const Icon(Icons.graphic_eq, size: 16),
-                const SizedBox(width: 8),
-                Text('🎵 Suara Lingkungan (${msg['soundscape_duration'] ?? 10}s)',
-                    style: TextStyle(color: isMe ? Colors.white70 : Colors.grey[700], fontSize: 13)),
-              ])
+              InkWell(
+                onTap: () {
+                  final path = msg['attachment_path'];
+                  if (path != null) {
+                    SoundRecorderService().playPreview(path);
+                  }
+                },
+                child: Row(children: [
+                  Icon(isMe ? Icons.play_circle_outline : Icons.play_circle, color: isMe ? Colors.white70 : const Color(0xFF2D7A4F), size: 20),
+                  const SizedBox(width: 8),
+                  Text('Suara Lingkungan 🎤',
+                      style: TextStyle(color: isMe ? Colors.white70 : Colors.grey[700], fontSize: 13, decoration: TextDecoration.underline)),
+                ]),
+              )
             else
               Text(
                 msg['content'] ?? '',

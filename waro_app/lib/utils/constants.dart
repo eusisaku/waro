@@ -16,7 +16,7 @@ class AppConstants {
 
   // Soundscape
   static const int soundscapeMaxDurationSeconds = 10;
-  static const int soundscapeMinDurationSeconds = 2;
+  static const double soundscapeMinDurationSeconds = 1.5;
   static const int soundscapeSampleRate = 22050;
   static const int soundscapeBitRate = 64000;
 
