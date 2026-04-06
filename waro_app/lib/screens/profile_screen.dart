@@ -15,21 +15,24 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Profil card
-          _buildProfileCard(),
+          // Profile card
+          _buildProfileCard(context),
           const SizedBox(height: 16),
           // Menu pengaturan
           _buildSection('⚙️ Pengaturan', [
-            _MenuItem(icon: Icons.pause_circle_outline, title: 'Kontak yang Dipause', subtitle: '0 kontak', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PausedContactsListScreen()))),
-            _MenuItem(icon: Icons.notifications_outlined, title: 'Notifikasi', subtitle: 'Semua aktif', onTap: () {}),
-            _MenuItem(icon: Icons.location_on_outlined, title: 'Pengaturan Lokasi', subtitle: 'Update 3x sehari', onTap: () {}),
-            _MenuItem(icon: Icons.dark_mode_outlined, title: 'Tema', subtitle: 'Ikuti sistem', onTap: () {}),
+            _MenuItem(icon: Icons.pause_circle_outline, title: 'Kontak yang Dipause', subtitle: kIsWeb ? '1 kontak' : '0 kontak', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PausedContactsListScreen()))),
+            _MenuItem(icon: Icons.notifications_outlined, title: 'Notifikasi', subtitle: 'Pagi & Malam saja', onTap: () {}),
+            _MenuItem(icon: Icons.location_on_outlined, title: 'Pengaturan Lokasi', subtitle: 'Kecamatan (Privat)', onTap: () {}),
+          ]),
+          const SizedBox(height: 8),
+          _buildSection('📦 Riwayat Warung', [
+            _MenuItem(icon: Icons.history, title: 'Kopi Kenangan Kemarin', subtitle: 'Bubar 2 hari lalu', onTap: () {}),
+            _MenuItem(icon: Icons.history, title: 'Mabar ML Waro', subtitle: 'Bubar 5 hari lalu', onTap: () {}),
           ]),
           const SizedBox(height: 8),
           _buildSection('💾 Data & Privasi', [
-            _MenuItem(icon: Icons.backup_outlined, title: 'Backup & Restore', subtitle: 'Google Drive', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupScreen()))),
+            _MenuItem(icon: Icons.backup_outlined, title: 'Backup ke File', subtitle: 'Simpan ke Memori HP', onTap: () {}),
             _MenuItem(icon: Icons.delete_outline, title: 'Hapus Cache', subtitle: 'Bebaskan ruang penyimpanan', onTap: () {}),
-            _MenuItem(icon: Icons.privacy_tip_outlined, title: 'Kebijakan Privasi', onTap: () {}),
           ]),
           const SizedBox(height: 8),
           _buildSection('💰 Monetisasi', [
@@ -52,7 +55,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileCard() {
+  Widget _buildProfileCard(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -74,8 +77,8 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Pengguna WARO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  Text('+62 812-3456-7890', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Text('Budi Waro 🏠', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text('Bio: Santai saja di Warung...', style: TextStyle(color: Colors.grey, fontSize: 12)),
                   SizedBox(height: 4),
                   Row(children: [
                     Icon(Icons.location_on, size: 13, color: Colors.grey),
@@ -85,9 +88,33 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(icon: const Icon(Icons.edit_outlined, color: Color(0xFF2D7A4F)), onPressed: () {}),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Color(0xFF2D7A4F)),
+              onPressed: () => _showEditProfile(context),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEditProfile(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Edit Identitas'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const TextField(decoration: InputDecoration(labelText: 'Nama Lengkap', hintText: 'Budi Waro')),
+            const SizedBox(height: 12),
+            const TextField(maxLines: 2, decoration: InputDecoration(labelText: 'Bio / Status', hintText: 'Lagi ngopi...')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Simpan')),
+        ],
       ),
     );
   }
@@ -177,7 +204,19 @@ class _PausedContactsListScreenState extends State<PausedContactsListScreen> {
 
   Future<void> _load() async {
     if (kIsWeb) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _paused = [
+          PausedContact(
+            contactId: 'mock_1',
+            contactName: 'Andi (Melihatmu)',
+            reason: PauseReason.focus,
+            pausedAt: DateTime.now(),
+            expiresAt: DateTime.now().add(const Duration(hours: 4)),
+            pendingMessagesCount: 3,
+          ),
+        ];
+        _isLoading = false;
+      });
       return;
     }
     try {
