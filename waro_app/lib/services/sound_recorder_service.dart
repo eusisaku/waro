@@ -158,9 +158,21 @@ class SoundRecorderService extends ChangeNotifier {
     if (kIsWeb) {
       _state = RecordingState.playing;
       notifyListeners();
-      await Future.delayed(const Duration(seconds: 2));
-      _state = RecordingState.idle;
-      notifyListeners();
+      
+      try {
+        // Play a relaxing placeholder sound for web simulation
+        await _player.play(UrlSource('https://www.soundjay.com/nature/rain-07.mp3'));
+        
+        _player.onPlayerComplete.listen((_) {
+          _state = RecordingState.idle;
+          notifyListeners();
+        });
+      } catch (e) {
+        debugPrint('Web Playback error: $e');
+        await Future.delayed(const Duration(seconds: 3));
+        _state = RecordingState.idle;
+        notifyListeners();
+      }
       return;
     }
 
