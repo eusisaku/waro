@@ -33,7 +33,7 @@ class AppConstants {
   static const List<int> locationUpdateHours = [6, 12, 18];
 
   // API
-  static const String apiBaseUrl = 'https://api.waro.id/v1';
+  static const String apiBaseUrl = 'http://localhost:3000/api';
   static const Duration apiTimeout = Duration(seconds: 30);
 
   // Database

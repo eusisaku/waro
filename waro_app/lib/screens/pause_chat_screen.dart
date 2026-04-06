@@ -52,9 +52,9 @@ class _PauseChatScreenState extends State<PauseChatScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           '${widget.contactName} akan tahu kamu sedang istirahat. Pesan mereka akan disimpan & dikirim setelah pause selesai.',
-                          style: TextStyle(fontSize: 12, color: Colors.orange),
+                          style: const TextStyle(fontSize: 12, color: Colors.orange),
                         ),
                       ],
                     ),
@@ -146,14 +146,14 @@ class _PauseChatScreenState extends State<PauseChatScreen> {
                 color: Colors.blue[50],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.visibility_outlined, color: Colors.blue, size: 16),
-                  SizedBox(width: 8),
+                  const Icon(Icons.visibility_outlined, color: Colors.blue, size: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Alasan dan durasi akan diketahui ${widget.contactName}. Ini fitur transparan, bukan blokir.',
-                      style: TextStyle(fontSize: 11, color: Colors.blue),
+                      style: const TextStyle(fontSize: 11, color: Colors.blue),
                     ),
                   ),
                 ],

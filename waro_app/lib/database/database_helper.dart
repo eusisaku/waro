@@ -1,5 +1,6 @@
 // lib/database/database_helper.dart
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import '../utils/constants.dart';
 
@@ -11,11 +12,16 @@ class DatabaseHelper {
   Database? _database;
 
   Future<Database> get database async {
+    if (kIsWeb) {
+      throw Exception('Database SQLite tidak didukung di platform Web. Gunakan Android atau Windows.');
+    }
     _database ??= await initDatabase();
     return _database!;
   }
 
   Future<Database> initDatabase() async {
+    if (kIsWeb) throw Exception('Database Init tidak didukung di Web');
+
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, AppConstants.dbName);
 
@@ -26,6 +32,7 @@ class DatabaseHelper {
       onUpgrade: _onUpgrade,
     );
   }
+
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''

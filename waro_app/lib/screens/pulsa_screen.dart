@@ -155,7 +155,7 @@ class _PulsaScreenState extends State<PulsaScreen> {
             ...AppConstants.pulsaPrices.entries.map(
               (e) => _PulsaPackCard(pulsa: e.key, price: e.value),
             ),
-            const SizedBox(height(12)),
+            const SizedBox(height: 12),
             const Divider(),
             const Text('Bayar pakai:', style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 8),

@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:provider/provider.dart';
 
@@ -9,41 +10,49 @@ import 'sync/background_sync.dart';
 import 'services/pause_chat_service.dart';
 import 'services/warung_service.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'services/auth_service.dart';
 import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi WorkManager untuk background sync
-  await Workmanager().initialize(
-    waroBackgroundSyncDispatcher,
-    isInDebugMode: false,
-  );
+  // Inisialisasi WorkManager untuk background sync (Skip di Web)
+  if (!kIsWeb) {
+    await Workmanager().initialize(
+      waroBackgroundSyncDispatcher,
+      isInDebugMode: false,
+    );
 
-  // Register periodic background tasks
-  await Workmanager().registerPeriodicTask(
-    'waro_sync_task',
-    'waroBackgroundSync',
-    frequency: const Duration(hours: 1),
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-      requiresBatteryNotLow: false,
-    ),
-  );
+    // Register periodic background tasks
+    await Workmanager().registerPeriodicTask(
+      'waro_sync_task',
+      'waroBackgroundSync',
+      frequency: const Duration(hours: 1),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+        requiresBatteryNotLow: false,
+      ),
+    );
 
-  await Workmanager().registerPeriodicTask(
-    'waro_expire_warungs',
-    'waroExpireWarungs',
-    frequency: const Duration(minutes: 30),
-  );
+    await Workmanager().registerPeriodicTask(
+      'waro_expire_warungs',
+      'waroExpireWarungs',
+      frequency: const Duration(minutes: 30),
+    );
+  }
 
-  // Inisialisasi database lokal
-  await DatabaseHelper.instance.initDatabase();
+  // Inisialisasi database lokal (Skip di Web)
+  if (!kIsWeb) {
+    await DatabaseHelper.instance.initDatabase();
+  }
 
-  // Inisialisasi services
-  SyncQueueManager().init();
-  PauseChatService().init();
-  WarungService().init();
+  // Inisialisasi services (Skip di Web jika menggunakan sqflite)
+  if (!kIsWeb) {
+    SyncQueueManager().init();
+    PauseChatService().init();
+    WarungService().init();
+  }
 
   runApp(const WaroApp());
 }
@@ -83,7 +92,7 @@ class WaroApp extends StatelessWidget {
               ),
             ),
           ),
-          cardTheme: CardTheme(
+          cardTheme: CardThemeData(
             elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -100,7 +109,21 @@ class WaroApp extends StatelessWidget {
           useMaterial3: true,
         ),
         themeMode: ThemeMode.system,
-        home: const HomeScreen(),
+        home: FutureBuilder<bool>(
+          future: AuthService().verifyToken(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                backgroundColor: Color(0xFFF5F5F0),
+                body: Center(child: CircularProgressIndicator(color: Color(0xFF2D7A4F))),
+              );
+            }
+            if (snapshot.data == true) {
+              return const HomeScreen();
+            }
+            return const LoginScreen();
+          },
+        ),
       ),
     );
   }

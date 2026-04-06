@@ -1,8 +1,10 @@
 // lib/sync/sync_queue.dart
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_helper.dart';
 import '../utils/constants.dart';
 
@@ -201,12 +203,50 @@ class SyncQueueManager extends ChangeNotifier {
 
   /// Kirim ke server (HTTP)
   Future<bool> _sendToServer(String method, String table, String id, Map<String, dynamic>? data) async {
-    // Implementasi dengan Dio ke backend WARO
-    // Saat ini return true sebagai placeholder
+    final dio = Dio(BaseOptions(
+      baseUrl: AppConstants.apiBaseUrl,
+      connectTimeout: AppConstants.apiTimeout,
+      receiveTimeout: AppConstants.apiTimeout,
+    ));
+
     try {
-      await Future.delayed(const Duration(milliseconds: 200)); // simulasi network
-      return true;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        debugPrint('⚠️ Sync: Token tidak ditemukan, tunda sync');
+        return false;
+      }
+
+      // Mapping operasi ke tipe sync backend
+      String opType = 'send_message';
+      if (table == 'messages') opType = 'send_message';
+      else if (table == 'contacts' && method == 'UPDATE') opType = (data?['is_paused'] == 1) ? 'pause' : 'unpause';
+      else if (table == 'warungs' && method == 'INSERT') opType = 'create_warung';
+
+      final response = await dio.post(
+        '/sync/push',
+        data: {
+          'operations': [
+            {
+              'type': opType,
+              'payload': {
+                ...data ?? {},
+                'localId': id,
+              }
+            }
+          ]
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final results = response.data['data']['results'] as List;
+        return results.isNotEmpty && results[0]['success'] == true;
+      }
+      return false;
     } catch (e) {
+      debugPrint('❌ Sync Network Error: $e');
       return false;
     }
   }
