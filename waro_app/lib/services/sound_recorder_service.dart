@@ -31,7 +31,8 @@ class SoundRecorderService extends ChangeNotifier {
 
   String get formattedDuration {
     final seconds = _currentDuration.inSeconds % 60;
-    return '${_currentDuration.inMinutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    final ms = (_currentDuration.inMilliseconds % 1000) ~/ 10;
+    return '${_currentDuration.inMinutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${ms.toString().padLeft(2, '0')}';
   }
 
   double get recordingProgress =>
@@ -54,21 +55,6 @@ class SoundRecorderService extends ChangeNotifier {
   Future<void> startRecording() async {
     if (_state == RecordingState.recording) return;
 
-    if (kIsWeb) {
-      _state = RecordingState.recording;
-      _currentDuration = Duration.zero;
-      _durationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        _currentDuration += const Duration(milliseconds: 100);
-        notifyListeners();
-        if (_currentDuration.inSeconds >= AppConstants.soundscapeMaxDurationSeconds) {
-          stopRecording();
-          timer.cancel();
-        }
-      });
-      notifyListeners();
-      return;
-    }
-
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
       _state = RecordingState.error;
@@ -77,9 +63,9 @@ class SoundRecorderService extends ChangeNotifier {
     }
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '${dir.path}/soundscape_$timestamp.m4a';
+      _currentDuration = Duration.zero;
+      _state = RecordingState.recording;
+      notifyListeners();
 
       final config = RecordConfig(
         encoder: AudioEncoder.aacLc,
@@ -88,15 +74,19 @@ class SoundRecorderService extends ChangeNotifier {
         numChannels: 1,
       );
 
-      await _recorder.start(config, path: filePath);
+      // Pada web, path null/kosong akan menghasilkan Blob URL
+      String? path;
+      if (!kIsWeb) {
+        final dir = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        path = '${dir.path}/soundscape_$timestamp.m4a';
+      }
 
-      _currentRecordingPath = filePath;
-      _state = RecordingState.recording;
-      _currentDuration = Duration.zero;
+      await _recorder.start(config, path: path ?? '');
 
-      // Timer: update setiap 100ms, berhenti di 10 detik
-      _durationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        _currentDuration += const Duration(milliseconds: 100);
+      // Timer: update setiap 50ms untuk feedback lancar
+      _durationTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+        _currentDuration += const Duration(milliseconds: 50);
         notifyListeners();
 
         if (_currentDuration.inSeconds >= AppConstants.soundscapeMaxDurationSeconds) {
@@ -104,8 +94,6 @@ class SoundRecorderService extends ChangeNotifier {
           timer.cancel();
         }
       });
-
-      notifyListeners();
     } catch (e) {
       debugPrint('startRecording error: $e');
       _state = RecordingState.error;
@@ -120,20 +108,14 @@ class SoundRecorderService extends ChangeNotifier {
 
     _durationTimer?.cancel();
 
-    if (kIsWeb) {
-      _state = RecordingState.idle;
-      _currentRecordingPath = 'web_mock_soundscape.m4a';
-      notifyListeners();
-      return _currentRecordingPath;
-    }
-
     try {
       final path = await _recorder.stop();
       _state = RecordingState.idle;
 
       // Validasi durasi minimal
       if (_currentDuration.inSeconds < AppConstants.soundscapeMinDurationSeconds) {
-        if (path != null && await File(path).exists()) {
+        // Hapus jika file (hanya non-web)
+        if (!kIsWeb && path != null && await File(path).exists()) {
           await File(path).delete();
         }
         _currentRecordingPath = null;
@@ -155,30 +137,6 @@ class SoundRecorderService extends ChangeNotifier {
 
   /// Putar preview rekaman
   Future<void> playPreview(String filePath) async {
-    if (kIsWeb) {
-      _state = RecordingState.playing;
-      notifyListeners();
-      
-      // Visual feedback for simulation
-      debugPrint('Web Simulation: Playing soundscape...');
-      
-      try {
-        // One last try with a very common test sound
-        await _player.play(UrlSource('https://luan.xyz/files/audio/ambient_c_motion.mp3'));
-        
-        _player.onPlayerComplete.listen((_) {
-          _state = RecordingState.idle;
-          notifyListeners();
-        });
-      } catch (e) {
-        debugPrint('Web Playback suppressed by browser: $e');
-        await Future.delayed(const Duration(seconds: 3));
-        _state = RecordingState.idle;
-        notifyListeners();
-      }
-      return;
-    }
-
     if (_state == RecordingState.playing) {
       await _player.stop();
     }
@@ -186,7 +144,20 @@ class SoundRecorderService extends ChangeNotifier {
     _state = RecordingState.playing;
     notifyListeners();
 
-    await _player.play(DeviceFileSource(filePath));
+    try {
+      if (kIsWeb) {
+        // Di web, path adalah Blob URL
+        await _player.play(UrlSource(filePath));
+      } else {
+        await _player.play(DeviceFileSource(filePath));
+      }
+    } catch (e) {
+      debugPrint('Playback error: $e');
+      _state = RecordingState.idle;
+      notifyListeners();
+      rethrow;
+    }
+
     _player.onPlayerComplete.listen((_) {
       _state = RecordingState.idle;
       notifyListeners();
@@ -202,14 +173,11 @@ class SoundRecorderService extends ChangeNotifier {
 
   /// Hapus rekaman
   Future<void> deleteRecording(String filePath) async {
-    if (kIsWeb) {
-       _currentRecordingPath = null;
-       notifyListeners();
-       return;
-    }
     try {
-      final file = File(filePath);
-      if (await file.exists()) await file.delete();
+      if (!kIsWeb) {
+        final file = File(filePath);
+        if (await file.exists()) await file.delete();
+      }
       if (_currentRecordingPath == filePath) {
         _currentRecordingPath = null;
       }
