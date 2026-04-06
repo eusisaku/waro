@@ -175,8 +175,17 @@ class _PausedContactsListScreenState extends State<PausedContactsListScreen> {
   }
 
   Future<void> _load() async {
-    final list = await _service.getPausedContacts();
-    setState(() { _paused = list; _isLoading = false; });
+    if (kIsWeb) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final list = await _service.getPausedContacts();
+      setState(() { _paused = list; _isLoading = false; });
+    } catch (e) {
+      debugPrint('Error loading paused: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   @override

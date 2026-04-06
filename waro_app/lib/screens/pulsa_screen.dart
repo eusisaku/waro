@@ -22,18 +22,32 @@ class _PulsaScreenState extends State<PulsaScreen> {
   }
 
   Future<void> _loadData() async {
-    final db = await DatabaseHelper.instance.database;
-    final balanceResult = await db.query('pulsa_balance', where: 'id = 1');
-    final historyResult = await db.query(
-      'pulsa_transactions',
-      orderBy: 'created_at DESC',
-      limit: 30,
-    );
-    setState(() {
-      _balance = balanceResult.isNotEmpty ? (balanceResult.first['balance'] as int? ?? 0) : 0;
-      _history = historyResult;
-      _isLoading = false;
-    });
+    if (kIsWeb) {
+      setState(() {
+        _balance = 20; // Default dummy balance for web
+        _history = [];
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final balanceResult = await db.query('pulsa_balance', where: 'id = 1');
+      final historyResult = await db.query(
+        'pulsa_transactions',
+        orderBy: 'created_at DESC',
+        limit: 30,
+      );
+      setState(() {
+        _balance = balanceResult.isNotEmpty ? (balanceResult.first['balance'] as int? ?? 0) : 0;
+        _history = historyResult;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading pulsa: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   @override

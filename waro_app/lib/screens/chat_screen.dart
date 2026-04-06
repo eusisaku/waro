@@ -36,28 +36,41 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
-    final db = await DatabaseHelper.instance.database;
-    List<Map<String, dynamic>> messages;
-
-    if (widget.warungId != null) {
-      messages = await db.query(
-        'messages',
-        where: 'warung_id = ?',
-        whereArgs: [widget.warungId],
-        orderBy: 'sent_at ASC',
-      );
-    } else if (widget.contactId != null) {
-      messages = await db.rawQuery('''
-        SELECT * FROM messages 
-        WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
-        ORDER BY sent_at ASC
-      ''', [_myId, widget.contactId, widget.contactId, _myId]);
-    } else {
-      messages = [];
+    if (kIsWeb) {
+      setState(() {
+        _messages = [];
+        _isLoading = false;
+      });
+      return;
     }
 
-    setState(() => _messages = messages);
-    _scrollToBottom();
+    try {
+      final db = await DatabaseHelper.instance.database;
+      List<Map<String, dynamic>> messages;
+
+      if (widget.warungId != null) {
+        messages = await db.query(
+          'messages',
+          where: 'warung_id = ?',
+          whereArgs: [widget.warungId],
+          orderBy: 'sent_at ASC',
+        );
+      } else if (widget.contactId != null) {
+        messages = await db.rawQuery('''
+          SELECT * FROM messages 
+          WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
+          ORDER BY sent_at ASC
+        ''', [_myId, widget.contactId, widget.contactId, _myId]);
+      } else {
+        messages = [];
+      }
+
+      setState(() => _messages = messages);
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('Error loading messages: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _checkPauseStatus() async {
